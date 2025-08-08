@@ -1,0 +1,93 @@
+/* Admin Dashboard Specific Styles */
+
+.sidebar-btn {
+    border: none;
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.sidebar-btn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.sidebar-btn.active {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.content-section {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.table th {
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 0.75rem;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    transition: box-shadow 0.3s ease;
+}
+
+.btn {
+    border-radius: 0.5rem;
+    font-weight: 500;
+}
+
+.arabic {
+    font-family: 'Amiri', 'Traditional Arabic', 'Times New Roman', serif;
+    direction: rtl;
+    text-align: right;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100% !important;
+        min-height: auto !important;
+    }
+    
+    .d-flex {
+        flex-direction: column;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Custom scrollbar for sidebar */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}

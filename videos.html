@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Videos - Prof. I. A. Maqari</title>
+    
+     Bootstrap CSS 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+     Lucide Icons 
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+     Paystack 
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    
+     Custom CSS 
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+     Header 
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-lg">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <img src="placeholder-logo.png" alt="Logo" width="28" height="28" class="me-2">
+                <span class="fw-bold" id="site-title">Prof. I. A. Maqari</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html" id="nav-home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="audio.html" id="nav-audio">Audio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="videos.html" id="nav-videos">Videos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="admin-login.html" id="nav-admin">
+                            <i data-lucide="log-in" class="me-1"></i><span id="nav-admin-text">Admin</span>
+                        </a>
+                    </li>
+                </ul>
+                
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success btn-sm" onclick="showDonationModal()" id="donate-btn">
+                        <i data-lucide="heart" class="me-1"></i><span id="donate-btn-text">Support Islam</span>
+                    </button>
+                    <button class="btn btn-outline-light btn-sm" onclick="toggleLanguage()" id="language-btn">
+                        <i data-lucide="globe" class="me-1"></i><span id="language-btn-text">عربي</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+     Main Content 
+    <main class="container my-5">
+         Professor Image Section 
+        <section class="mb-5 text-center">
+            <img src="maulana6.jfif" alt="Prof. Ibrahim Ahmad Maqari" 
+                 class="rounded-circle border border-primary border-4 mb-3" 
+                 width="100" height="100">
+            <h1 class="fw-bold text-dark mb-4" id="videos-title">Video Collection</h1>
+        </section>
+
+         Search Bar 
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i data-lucide="search"></i>
+                    </span>
+                    <input type="text" class="form-control" id="search-input" 
+                           placeholder="Search videos by title...">
+                </div>
+            </div>
+        </div>
+
+         Filter Buttons 
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-8">
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <button class="btn btn-outline-primary btn-sm filter-btn active" data-filter="all" id="filter-all">
+                        <span id="filter-all-text">All Videos</span>
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="youtube" id="filter-youtube">
+                        <i data-lucide="youtube" class="me-1"></i><span id="filter-youtube-text">YouTube</span>
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm filter-btn" data-filter="local" id="filter-local">
+                        <i data-lucide="video" class="me-1"></i><span id="filter-local-text">Local Videos</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+         Loading Spinner 
+        <div id="loading-spinner" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden" id="loading-text">Loading...</span>
+            </div>
+            <p class="mt-2" id="loading-videos-text">Loading videos...</p>
+        </div>
+
+         No Videos Found 
+        <div id="no-videos" class="text-center py-5 d-none">
+            <p class="text-muted fs-5" id="no-videos-text">No videos found matching your search.</p>
+        </div>
+
+         Videos Grid 
+        <div id="videos-grid" class="row g-4">
+             Video items will be populated by JavaScript 
+        </div>
+    </main>
+
+     Video Modal 
+    <div class="modal fade" id="videoModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="video-modal-title">Video Title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="closeVideoModal()"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div id="video-container" class="ratio ratio-16x9">
+                         Video player will be inserted here 
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="text-start flex-grow-1">
+                        <p class="mb-0 small text-muted" id="video-modal-description">Video description</p>
+                    </div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="closeVideoModal()">
+                        <span id="close-video-text">Close</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+     Back to Top Button 
+    <button id="back-to-top" class="btn btn-primary position-fixed bottom-0 end-0 m-3 rounded-circle d-none">
+        <i data-lucide="arrow-up"></i>
+    </button>
+
+     Footer 
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5 id="footer-contact-title">Contact Information</h5>
+                    <div class="text-muted small">
+                        <p id="footer-email">📧 1440shamsusabo@gmail.com</p>
+                        <p id="footer-phone">📞 08030909793</p>
+                        <p id="footer-location">📍 Nigeria</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <h5 id="footer-quick-links">Quick Links</h5>
+                    <div class="d-flex flex-column">
+                        <a href="index.html" class="text-muted text-decoration-none small mb-1" id="footer-home">Home</a>
+                        <a href="audio.html" class="text-muted text-decoration-none small mb-1" id="footer-audio">Audio</a>
+                        <a href="videos.html" class="text-muted text-decoration-none small mb-1" id="footer-videos">Videos</a>
+                        <a href="admin-login.html" class="text-muted text-decoration-none small" id="footer-admin">Admin</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <h5 id="footer-support-title">Support Our Work</h5>
+                    <button class="btn btn-success btn-sm mb-2" onclick="showDonationModal()" id="footer-donate-btn">
+                        <i data-lucide="heart" class="me-1"></i><span id="footer-donate-text">Support Islamic Education</span>
+                    </button>
+                    <br>
+                    <button class="btn btn-outline-light btn-sm" onclick="toggleLanguage()" id="footer-language-btn">
+                        <i data-lucide="globe" class="me-1"></i><span id="footer-language-text">Switch Language</span>
+                    </button>
+                </div>
+            </div>
+            <hr class="my-4 border-secondary">
+            <div class="text-center text-muted small">
+                <p id="footer-credits">
+                    <span id="developed-by-text">Developed by</span> <strong>Your Name</strong> | 
+                    <span id="sponsored-by-text">Sponsored by</span> <strong>Sponsor Name</strong>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+     Donation Modal 
+    <div class="modal fade" id="donationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title text-success" id="donation-modal-title">Support Islamic Education & Da'wah</h5>
+                        <p class="small text-muted mb-0" id="donation-modal-subtitle">
+                            Help us spread Islamic knowledge and support Prof. Maqari's educational mission
+                        </p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="paystack-loading" class="alert alert-warning">
+                        <p class="mb-0 small" id="paystack-loading-text">Loading payment system...</p>
+                    </div>
+                    <form id="donation-form">
+                        <div class="mb-3">
+                            <label class="form-label" id="donor-name-label">Donor Name</label>
+                            <input type="text" class="form-control" name="donorName" required id="donor-name-input">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" id="amount-label">Amount (₦)</label>
+                            <input type="number" class="form-control" name="amount" min="100" required id="amount-input">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" id="donor-email-label">Email (Optional)</label>
+                            <input type="email" class="form-control" name="email" placeholder="1440shamsusabo@gmail.com" id="donor-email-input">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" id="donor-phone-label">Phone (Optional)</label>
+                            <input type="tel" class="form-control" name="phone" placeholder="08030909793" id="donor-phone-input">
+                        </div>
+                        <div class="alert alert-success">
+                            <p class="small text-center mb-0" id="donation-message">
+                                Help us spread Islamic knowledge and support Prof. Maqari's educational mission
+                            </p>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancel-btn">
+                        <span id="cancel-text">Cancel</span>
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="handleDonation()" id="donate-now-btn">
+                        <span id="donate-now-text">Donate Now - Support Islam</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+     Bootstrap JS 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+     Custom JavaScript 
+    <script src="videos-script.js"></script>
+</body>
+</html>

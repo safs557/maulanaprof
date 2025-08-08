@@ -1,0 +1,461 @@
+/* Custom CSS for the converted homepage */
+
+/* Root variables */
+:root {
+    --primary-color: #0d6efd;
+    --success-color: #198754;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --dark-color: #212529;
+    --light-color: #f8f9fa;
+    --border-radius: 0.625rem;
+}
+
+/* Arabic font styling */
+.arabic {
+    font-family: 'Amiri', 'Traditional Arabic', 'Times New Roman', serif;
+    direction: rtl;
+    text-align: right;
+    line-height: 1.8;
+}
+
+/* RTL support */
+[dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+}
+
+[dir="rtl"] .navbar-brand {
+    margin-right: 0;
+    margin-left: auto;
+}
+
+[dir="rtl"] .navbar-nav {
+    margin-right: auto;
+    margin-left: 0;
+}
+
+[dir="rtl"] .me-1, [dir="rtl"] .me-2 {
+    margin-right: 0 !important;
+    margin-left: 0.25rem !important;
+}
+
+[dir="rtl"] .ms-1, [dir="rtl"] .ms-2 {
+    margin-left: 0 !important;
+    margin-right: 0.25rem !important;
+}
+
+[dir="rtl"] .text-justify {
+    text-align: justify;
+}
+
+[dir="rtl"] .d-flex {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .input-group .form-control {
+    text-align: right;
+}
+
+[dir="rtl"] .btn {
+    text-align: center;
+}
+
+[dir="rtl"] .card-title {
+    text-align: right;
+}
+
+[dir="rtl"] .modal-title {
+    text-align: right;
+}
+
+[dir="rtl"] .form-label {
+    text-align: right;
+    display: block;
+}
+
+[dir="rtl"] .list-unstyled {
+    text-align: right;
+}
+
+[dir="rtl"] .text-center {
+    text-align: center !important;
+}
+
+/* Profile image styling */
+.prof-image {
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.prof-image:hover {
+    transform: scale(1.05);
+}
+
+/* Book card styling */
+.book-card {
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.book-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.book-cover {
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.book-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.5em;
+}
+
+.book-title.arabic {
+    font-family: 'Amiri', 'Traditional Arabic', 'Times New Roman', serif;
+    direction: rtl;
+    text-align: right;
+    line-height: 1.6;
+}
+
+/* Back to top button */
+#back-to-top {
+    width: 50px;
+    height: 50px;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+#back-to-top:hover {
+    transform: translateY(-3px);
+}
+
+/* Loading spinner */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Search input styling */
+.input-group-text {
+    background-color: var(--light-color);
+    border-right: none;
+}
+
+[dir="rtl"] .input-group-text {
+    border-right: 1px solid #ced4da;
+    border-left: none;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.form-control.text-end {
+    text-align: right;
+}
+
+.form-select.text-end {
+    text-align: right;
+}
+
+/* Contact form styling */
+.card {
+    border: none;
+    border-radius: var(--border-radius);
+}
+
+.card.shadow {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.card.shadow-lg {
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+}
+
+/* Button styling */
+.btn {
+    border-radius: var(--border-radius);
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Modal styling */
+.modal-content {
+    border-radius: var(--border-radius);
+    border: none;
+}
+
+.modal-header {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+}
+
+[dir="rtl"] .modal-header {
+    text-align: right;
+}
+
+[dir="rtl"] .modal-body {
+    text-align: right;
+}
+
+[dir="rtl"] .modal-footer {
+    flex-direction: row-reverse;
+}
+
+/* Navbar styling */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-brand img {
+    border-radius: 50%;
+}
+
+[dir="rtl"] .navbar-toggler {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+/* Footer styling */
+footer {
+    background-color: var(--dark-color) !important;
+}
+
+footer a:hover {
+    color: white !important;
+}
+
+[dir="rtl"] footer .row {
+    text-align: right;
+}
+
+[dir="rtl"] footer .d-flex {
+    align-items: flex-start;
+}
+
+/* Form styling for RTL */
+[dir="rtl"] .form-control,
+[dir="rtl"] .form-select,
+[dir="rtl"] textarea {
+    text-align: right;
+    direction: rtl;
+}
+
+[dir="rtl"] .form-label {
+    text-align: right;
+    display: block;
+    width: 100%;
+}
+
+[dir="rtl"] .input-group {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .input-group .input-group-text {
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+[dir="rtl"] .input-group .form-control {
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
+}
+
+/* Alert styling for RTL */
+[dir="rtl"] .alert {
+    text-align: right;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .book-card {
+        margin-bottom: 1rem;
+    }
+    
+    .prof-image {
+        width: 80px;
+        height: 80px;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+    
+    .btn-sm {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    [dir="rtl"] .navbar-brand span {
+        font-size: 0.9rem;
+    }
+    
+    [dir="rtl"] .card-body {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .navbar-brand span {
+        font-size: 0.9rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+    
+    [dir="rtl"] .modal-dialog {
+        margin: 0.5rem;
+    }
+    
+    [dir="rtl"] .btn-sm {
+        font-size: 0.7rem;
+    }
+}
+
+/* Animation classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+/* Text utilities */
+.text-justify {
+    text-align: justify;
+}
+
+[dir="rtl"] .text-justify {
+    text-align: justify;
+    direction: rtl;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #0056b3;
+}
+
+/* Arabic typography improvements */
+.arabic h1, .arabic h2, .arabic h3, .arabic h4, .arabic h5, .arabic h6 {
+    font-weight: bold;
+    line-height: 1.6;
+}
+
+.arabic p {
+    line-height: 1.8;
+    text-align: justify;
+}
+
+.arabic .btn {
+    font-weight: 500;
+}
+
+.arabic .form-control, .arabic .form-select {
+    font-family: 'Amiri', 'Traditional Arabic', 'Times New Roman', serif;
+    line-height: 1.6;
+}
+
+/* Ensure proper RTL layout for all components */
+[dir="rtl"] .row {
+    --bs-gutter-x: 1.5rem;
+}
+
+[dir="rtl"] .col-md-3,
+[dir="rtl"] .col-md-4,
+[dir="rtl"] .col-md-6,
+[dir="rtl"] .col-md-8,
+[dir="rtl"] .col-md-9 {
+    text-align: right;
+}
+
+[dir="rtl"] .text-center {
+    text-align: center !important;
+}
+
+[dir="rtl"] .text-muted {
+    text-align: right;
+}
+
+/* Fix button alignment in RTL */
+[dir="rtl"] .d-grid .btn {
+    text-align: center;
+}
+
+[dir="rtl"] .btn-group {
+    flex-direction: row-reverse;
+}
+
+/* Improve Arabic readability */
+.arabic {
+    font-size: 1.05em;
+    letter-spacing: 0.02em;
+}
+
+.arabic .small {
+    font-size: 0.9em;
+}
+
+.arabic .fs-5 {
+    font-size: 1.15rem;
+}
+
+/* Print styles */
+@media print {
+    .navbar, .back-to-top, footer, .modal {
+        display: none !important;
+    }
+    
+    .container {
+        max-width: none !important;
+    }
+    
+    [dir="rtl"] * {
+        direction: rtl;
+        text-align: right;
+    }
+}

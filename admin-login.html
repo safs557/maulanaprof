@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Prof. I. A. Maqari</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-light">
+    <div class="min-vh-100 d-flex align-items-center justify-content-center p-4" style="background: linear-gradient(135deg, #e3f2fd 0%, #e8f5e8 100%);">
+        <div class="bg-white rounded-4 shadow-lg p-5" style="max-width: 400px; width: 100%;">
+            <!-- Professor's Image and Header -->
+            <div class="text-center mb-4">
+                <div class="position-relative d-inline-block mb-3">
+                    <img src="maulana1.jfif" alt="Prof. Ibrahim Ahmad Maqari" 
+                         class="rounded-circle border border-primary border-4" 
+                         width="96" height="96" style="object-fit: cover;">
+                </div>
+                <h1 class="h3 fw-bold text-dark mb-2">Admin Login</h1>
+                <p class="text-muted small mb-1">Prof. Ibrahim Ahmad Maqari Repository</p>
+                <p class="text-primary small">Islamic Learning Platform</p>
+            </div>
+
+            <!-- Error Alert -->
+            <div id="error-alert" class="alert alert-danger d-none" role="alert">
+                <span id="error-message"></span>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form">
+                <div class="mb-3">
+                    <label for="username" class="form-label fw-medium">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light">
+                            <i data-lucide="user" class="text-muted"></i>
+                        </span>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               placeholder="Enter username" required autofocus>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" class="form-label fw-medium">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light">
+                            <i data-lucide="key" class="text-muted"></i>
+                        </span>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="Enter password" required>
+                        <button type="button" class="btn btn-outline-secondary" id="toggle-password">
+                            <i data-lucide="eye" id="password-icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-medium" id="login-btn" 
+                        style="background: linear-gradient(135deg, #0d6efd 0%, #198754 100%); border: none;">
+                    <span id="login-btn-content">
+                        <i data-lucide="log-in" class="me-2"></i>
+                        Login to Dashboard
+                    </span>
+                    <div id="login-spinner" class="d-none">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        Logging in...
+                    </div>
+                </button>
+            </form>
+
+            <!-- Default Credentials Info -->
+            <div class="mt-4">
+                <div class="bg-light border rounded-3 p-3">
+                    <p class="small text-muted mb-2 fw-bold">Default Credentials:</p>
+                    <p class="small text-dark mb-1">
+                        Username: <code class="bg-secondary bg-opacity-25 px-2 py-1 rounded">admin</code>
+                    </p>
+                    <p class="small text-dark mb-0">
+                        Password: <code class="bg-secondary bg-opacity-25 px-2 py-1 rounded">admin</code>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center mt-4">
+                <p class="small text-muted mb-1">© 2024 Prof. Ibrahim Ahmad Maqari Platform</p>
+                <p class="small text-muted">Islamic Educational Resources</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="admin-login-script.js"></script>
+</body>
+</html>
