@@ -1,31 +1,28 @@
 const express = require('express');
-const mysql = require('mysql2');
-const bcrypt = require('bcryptjs');
 const bodyParser = require('body-parser');
 const path = require('path');
 const session = require('express-session');
+const bcrypt = require('bcryptjs');
+const db = require('./mysql'); // Ensure mysql.js is configured correctly
+const adminRoutes = require('./admin-routes');
 const fs = require('fs');
-const multer = require('multer');
-
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Middleware
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname)));
+const saltRounds = 10; // Define salt rounds for bcrypt hashing
 
 // Set up session
 app.use(session({
-  secret: 'islamic-scholar-secret-key-2024',
+  secret: 'YBdLcGmLbdsYrw9S4PNnaCW3SuHhZ6M0',
   resave: false,
   saveUninitialized: false,
-  cookie: {
+  cookie: { 
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours session expiration
+    maxAge:   60 * 60 * 1000 // 1 year session expiration
   }
 }));
 
+// Middleware to parse incoming request bodies
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 // Middleware to prevent caching of sensitive pages
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
@@ -34,627 +31,365 @@ app.use((req, res, next) => {
   next();
 });
 
-// Database connection
-const db = mysql.createConnection({
-  host: process.env.DB_HOST || "mysql-shamsu557.alwaysdata.net",
-  user: process.env.DB_USER || "shamsu557",
-  password: process.env.DB_PASSWORD || "@Shamsu1440",
-  database: process.env.DB_NAME || "shamsu557_maula_database"
-});
-
-// Connect to database
-db.connect((err) => {
-  if (err) {
-    console.error("❌ Database connection failed:", err);
-    return;
+// Middleware to check if the user is authenticated
+function isAuthenticated(req, res, next) {
+  if (req.session.user) {
+    return next();
+  } else {
+    return res.redirect('/login');
   }
-  console.log("✅ Connected to MySQL database");
-  
-  // Create tables if they don't exist
-  createTables();
-});
-
-// Create database tables
-function createTables() {
-  const tables = [
-    // Books Table
-    `CREATE TABLE IF NOT EXISTS books (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      title_english VARCHAR(255) NOT NULL,
-      title_arabic VARCHAR(255),
-      cover_image VARCHAR(255),
-      pdf_file VARCHAR(255),
-      file_size BIGINT DEFAULT 0,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )`,
-    
-    // Audio Table
-    `CREATE TABLE IF NOT EXISTS audio (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      title_english VARCHAR(255) NOT NULL,
-      title_arabic VARCHAR(255),
-      description_english TEXT,
-      description_arabic TEXT,
-      audio_file VARCHAR(255),
-      duration INT DEFAULT 0,
-      file_size BIGINT DEFAULT 0,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )`,
-    
-    // Videos Table
-    `CREATE TABLE IF NOT EXISTS videos (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      title_english VARCHAR(255) NOT NULL,
-      title_arabic VARCHAR(255),
-      description_english TEXT,
-      description_arabic TEXT,
-      video_url VARCHAR(500),
-      thumbnail VARCHAR(255),
-      duration INT DEFAULT 0,
-      views INT DEFAULT 0,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )`,
-    
-    // Admins Table
-    `CREATE TABLE IF NOT EXISTS admins (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      username VARCHAR(100) UNIQUE NOT NULL,
-      password VARCHAR(255) NOT NULL,
-      email VARCHAR(255),
-      phone VARCHAR(20),
-      role ENUM('superadmin', 'admin') DEFAULT 'admin',
-      first_login BOOLEAN DEFAULT TRUE,
-      is_active BOOLEAN DEFAULT TRUE,
-      last_login TIMESTAMP NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )`,
-    
-    // Donations Table
-    `CREATE TABLE IF NOT EXISTS donations (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      donor_name VARCHAR(255) NOT NULL,
-      donor_email VARCHAR(255),
-      donor_phone VARCHAR(20),
-      amount DECIMAL(12,2) NOT NULL,
-      reference VARCHAR(255) NOT NULL UNIQUE,
-      status ENUM('pending', 'success', 'failed') DEFAULT 'pending',
-      payment_method VARCHAR(50),
-      transaction_id VARCHAR(255),
-      date_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-      type VARCHAR(50) DEFAULT 'income',
-      description VARCHAR(255),
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )`,
-    
-    // Messages Table
-    `CREATE TABLE IF NOT EXISTS messages (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      email VARCHAR(255) NOT NULL,
-      phone VARCHAR(20),
-      category ENUM('complaint', 'suggestion', 'appreciation') NOT NULL,
-      subject VARCHAR(255),
-      message TEXT NOT NULL,
-      status ENUM('unread', 'read', 'replied') DEFAULT 'unread',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )`
-  ];
-
-  tables.forEach((table, index) => {
-    db.query(table, (err) => {
-      if (err) {
-        console.error(`Error creating table ${index + 1}:`, err);
-      } else {
-        console.log(`✅ Table ${index + 1} created or already exists`);
-      }
-    });
-  });
-
-  // Create default admin after tables are created
-  setTimeout(() => {
-    createDefaultAdmin();
-  }, 1000);
 }
-
-// Create default admin
-function createDefaultAdmin() {
-  // Check if admin already exists
-  db.query('SELECT * FROM admins WHERE username = ?', ['admin'], (err, results) => {
-    if (err) {
-      console.error('Error checking for admin:', err);
-      return;
-    }
-
-    if (results.length === 0) {
-      // Create default admin with username: admin, password: admin
-      const hashedPassword = bcrypt.hashSync('admin', 10);
-      
-      db.query(
-        'INSERT INTO admins (username, password, role, first_login) VALUES (?, ?, ?, ?)',
-        ['admin', hashedPassword, 'superadmin', false],
-        (err, result) => {
-          if (err) {
-            console.error('Error creating default admin:', err);
-          } else {
-            console.log('✅ Default admin created (username: admin, password: admin)');
-          }
-        }
-      );
-    } else {
-      console.log('✅ Admin already exists');
-    }
-  });
-}
-
-// Create uploads directories if they don't exist
-const createDirectories = async () => {
-  const dirs = ['uploads', 'uploads/covers', 'uploads/pdfs', 'uploads/audio'];
-  for (const dir of dirs) {
-    try {
-      await fs.promises.access(dir);
-    } catch {
-      await fs.promises.mkdir(dir, { recursive: true });
-      console.log(`✅ Created directory: ${dir}`);
-    }
-  }
-};
-
-// Multer configuration for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    if (file.fieldname === 'cover_image') {
-      cb(null, 'uploads/covers/');
-    } else if (file.fieldname === 'pdf_file') {
-      cb(null, 'uploads/pdfs/');
-    } else if (file.fieldname === 'audio_file') {
-      cb(null, 'uploads/audio/');
-    }
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ 
-  storage: storage,
-  limits: {
-    fileSize: 100 * 1024 * 1024 // 100MB limit
-  },
-  fileFilter: function (req, file, cb) {
-    if (file.fieldname === 'cover_image') {
-      if (file.mimetype.startsWith('image/')) {
-        cb(null, true);
-      } else {
-        cb(new Error('Only image files are allowed for cover image'));
-      }
-    } else if (file.fieldname === 'pdf_file') {
-      if (file.mimetype === 'application/pdf') {
-        cb(null, true);
-      } else {
-        cb(new Error('Only PDF files are allowed'));
-      }
-    } else if (file.fieldname === 'audio_file') {
-      if (file.mimetype.startsWith('audio/')) {
-        cb(null, true);
-      } else {
-        cb(new Error('Only audio files are allowed'));
-      }
-    } else {
-      cb(new Error('Unexpected field'));
-    }
-  }
-});
 
 // Middleware to check if the user is authenticated as admin
 function isAdminAuthenticated(req, res, next) {
   if (req.session.isAuthenticated) {
     return next(); // User is authenticated, proceed to the dashboard
   } else {
-    return res.redirect('/admin-login.html'); // Redirect to admin login if not authenticated
+    return res.redirect('/adminLogin'); // Redirect to admin login if not authenticated
   }
 }
 
-// Routes
+
+// Serve static files (HTML, CSS, JS, etc.) from the root directory
+app.use(express.static(path.join(__dirname)));
 
 // Serve index.html at the root path
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
-
-// Audio page
-app.get('/audio.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'audio.html'));
+// about page 
+app.get('/About', (req, res) => {
+  res.sendFile(path.join(__dirname, 'about.html'));
 });
 
-// Videos page
-app.get('/videos.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'videos.html'));
+
+// User Signup page
+app.get('/signup', (req, res) => {
+  res.sendFile(path.join(__dirname, 'signup.html'));
 });
 
-// Admin login page
-app.get('/admin-login.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin-login.html'));
+// Handle User Signup
+app.post('/signup', (req, res) => {
+  const { fullname, email, phone_number, password } = req.body;
+
+  // Check if the email already exists
+  db.query('SELECT email FROM users WHERE email = ?', [email], (err, results) => {
+    if (err) {
+      console.error('Error querying database for signup:', err);
+      return res.status(500).json({ success: false, message: 'Server error' });
+    }
+
+    // Check if the email is already taken
+    if (results.length > 0) {
+      return res.status(400).json({ success: false, message: 'Email already exists' });
+    }
+
+    // Hash the password and insert the new user
+    bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
+      if (err) {
+        console.error('Error hashing password:', err);
+        return res.status(500).json({ success: false, message: 'Server error' });
+      }
+
+      db.query(
+        'INSERT INTO users (fullname, email, phone_number, password) VALUES (?, ?, ?, ?)', 
+        [fullname, email, phone_number, hashedPassword], 
+        (err) => {
+          if (err) {
+            console.error('Error inserting user into database:', err);
+            return res.status(500).json({ success: false, message: 'Server error' });
+          }
+          res.json({ success: true, message: 'Registration successful! You can now log in.', redirectUrl: '/login' });
+        }
+      );
+    });
+  });
 });
+
+// User Login page
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+// Handle User Login
+app.post('/login', (req, res) => {
+  const { identifier, password } = req.body; // Use 'identifier' to accept either email or username
+
+  db.query('SELECT * FROM users WHERE email = ?', [identifier], (err, results) => {
+    if (err) {
+      console.error('Error querying database for login:', err);
+      return res.status(500).send('Server error');
+    }
+
+    if (results.length === 0) {
+      return res.status(400).send('No user found');
+    }
+
+    const user = results[0];
+    if (bcrypt.compareSync(password, user.password)) {
+      req.session.user = user;
+      res.redirect('/resources.html'); // Redirect to resources page after successful login
+    } else {
+      res.status(400).send('Incorrect password');
+    }
+  });
+});
+// Forgot password endpoint
+app.post('/forgot-password', (req, res) => {
+  const { email } = req.body;
+
+  db.query('SELECT email FROM users WHERE email = ?', [email], (err, result) => {
+    if (err) {
+      console.error('Error checking email:', err);
+      return res.status(500).send('Server error');
+    }
+
+    if (result.length > 0) {
+      res.json({ success: true, message: 'Email found. You may now reset your password.' });
+    } else {
+      res.json({ success: false, message: 'Email does not exist.' });
+    }
+  });
+});
+
+// Reset password endpoint
+app.post('/reset-password', (req, res) => {
+  const { email, newPassword } = req.body;
+
+  bcrypt.hash(newPassword, saltRounds, (err, hash) => {
+    if (err) {
+      console.error('Error hashing password:', err);
+      return res.status(500).send('Server error');
+    }
+
+    db.query('UPDATE users SET password = ? WHERE email = ?', [hash, email], (err, result) => {
+      if (err) {
+        console.error('Error updating password:', err);
+        return res.status(500).send('Server error');
+      }
+
+      if (result.affectedRows > 0) {
+        res.json({ success: true, message: 'Password updated successfully!', redirectUrl: '/login' });
+      } else {
+        res.json({ success: false, message: 'Failed to update password. Try again later.' });
+      }
+    });
+  });
+});
+
+// Admin creation login route (only allows Admin001 with 'default' password)
+app.post('/admin-creation-login', (req, res) => {
+  const { username, password } = req.body;
+
+  // Hardcoded credentials
+  const validUsername = 'Admin';
+  const validPassword = 'password';
+
+  // Check the credentials
+  if (username === validUsername && password === validPassword) {
+    // Credentials are correct, allow access to the admin signup page
+    return res.json({ success: true, message: 'Login successful! You can now create a new admin.' });
+  } else {
+    // Invalid credentials
+    return res.json({ success: false, message: 'Invalid credentials! You do not have permission to create admins.' });
+  }
+});
+
+// Admin Signup page
+app.get('/admin-signup', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin-signup.html'));
+});
+
+// Handle admin signup
+app.post('/admin-signup', (req, res) => {
+  const { username, password, email, fullName, phone } = req.body;
+
+  // Check if the email already exists
+  db.query('SELECT email FROM admins WHERE email = ?', [email], (err, results) => {
+    if (err) {
+      console.error('Error querying database for signup:', err);
+      return res.status(500).json({ success: false, message: 'Server error' });
+    }
+
+    // Check if the email is already taken
+    if (results.length > 0) {
+      return res.status(400).json({ success: false, message: 'Email already exists' });
+    } 
+
+    // Hash the password
+    bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
+      if (err) {
+        console.error('Error hashing password:', err);
+        return res.status(500).json({ success: false, message: 'Server error' });
+      }
+
+      // Insert new admin into the database
+      db.query('INSERT INTO admins (username, password, email, fullName, phone) VALUES (?, ?, ?, ?, ?)', 
+        [username, hashedPassword, email, fullName, phone], (err) => {
+          if (err) {
+            console.error('Error inserting admin into database:', err);
+            return res.status(500).json({ success: false, message: 'Server error' });
+          }
+          res.json({ success: true, message: 'Admin created successfully! They can now access the dashboard.', redirectUrl: '/adminLogin' });
+        }
+      );
+    });
+  });
+});
+
+// Middleware to check if user is authenticated
+function isAuthenticated(req, res, next) {
+  if (req.session.user) {
+    return next(); // User is authenticated, proceed to the next route
+  }
+  // Redirect to appropriate login page
+  if (req.path === '/admin-dashboard.html') {
+    res.redirect('/adminLogin');
+  } else if (req.path === '/resources.html') {
+    res.redirect('/login');
+  } else {
+    res.redirect('/login');
+  }
+}
+
+// Middleware to check if the user is authenticated and determine user type
+function isAuthenticated(req, res, next) {
+  if (req.session.user) {
+    return next(); // Continue if authenticated
+  }
+
+  // If not authenticated, check if the user is trying to access admin or resources page
+  if (req.path === '/admin-dashboard.html') {
+    res.redirect('/adminLogin'); // Redirect to admin login
+  } else if (req.path === '/resources.html') {
+    res.redirect('/login'); // Redirect to regular user login
+  } else {
+    res.redirect('/login'); // Default to user login
+  }
+}
 
 // Admin Dashboard Route (protected for admin users)
 app.get('/admin-dashboard.html', isAdminAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, 'admin-dashboard.html'));
 });
 
+// Resources Route (protected for regular users)
+app.get('/resources.html', isAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, 'resources.html'));
+});
+
+// Single auth-check route for both admin-dashboard.html and resources.html
+app.get('/auth-check', (req, res) => {
+  if (req.session.user) {
+    // Include userType to differentiate between admin and regular users
+    res.json({ authenticated: true, userType: req.session.userType });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+
+// Admin login page
+app.get('/adminLogin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin-login.html'));
+});
 // Handle admin login
-app.post('/admin-login', (req, res) => {
+app.post('/adminLogin', (req, res) => {
   const { username, password } = req.body;
-  
+
   db.query('SELECT * FROM admins WHERE username = ?', [username], (err, results) => {
-    if (err) {
-      console.error('Error querying database for admin login:', err);
-      return res.status(500).json({ error: 'Server error' });
-    }
-    
-    if (results.length === 0) {
-      return res.status(400).json({ error: 'Invalid credentials' });
-    }
-    
-    const admin = results[0];
-    
-    if (bcrypt.compareSync(password, admin.password)) {
-      req.session.isAuthenticated = true;
-      req.session.admin = {
-        id: admin.id,
-        username: admin.username,
-        role: admin.role
-      };
-      
-      // Update last login
-      db.query('UPDATE admins SET last_login = NOW() WHERE id = ?', [admin.id]);
-      
-      res.json({ success: true, message: 'Login successful' });
-    } else {
-      res.status(400).json({ error: 'Invalid credentials' });
-    }
+      if (err) {
+          console.error('Error querying database for admin login:', err);
+          return res.status(500).send('Server error');
+      }
+
+      if (results.length === 0) {
+          return res.status(400).send('No admin found');
+      }
+
+      const user = results[0];
+      if (bcrypt.compareSync(password, user.password)) {
+          req.session.user = user;
+          res.redirect('/admin-dashboard.html'); // Redirect to the admin dashboard
+      } else {
+          res.status(400).send('Incorrect password');
+      }
   });
 });
 
-// Admin logout route
-app.get('/admin-logout', (req, res) => {
+// API Endpoint to fetch books
+app.get('/api/books', (req, res) => {
+  const query = 'SELECT id, bookTitle, file_name, image FROM books ORDER BY date_added DESC';
+  
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching books:', err);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+    res.json(results);
+  });
+});
+
+// API Endpoint to fetch papers
+app.get('/api/papers', (req, res) => {
+  const query = 'SELECT id, paperTitle, file_name, image FROM papers ORDER BY date_added DESC';
+  
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching papers:', err);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+    res.json(results);
+  });
+});
+
+// Serve book or paper files for reading
+app.get('/view/:fileName', (req, res) => {
+  const filePath = path.join(__dirname, req.params.fileName); // Serve directly from the current folder
+  
+  fs.access(filePath, fs.constants.F_OK, (err) => {
+    if (err) {
+      return res.status(404).send('File not found');
+    }
+    res.sendFile(filePath);
+  });
+});
+
+// Serve files for download
+app.get('/files/:fileName', (req, res) => {
+  const filePath = path.join(__dirname, req.params.fileName); // Serve directly from the current folder
+  
+  fs.access(filePath, fs.constants.F_OK, (err) => {
+    if (err) {
+      return res.status(404).send('File not found');
+    }
+    res.download(filePath);
+  });
+});
+
+// Logout route
+app.get('/logout', (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       console.error('Error destroying session:', err);
       return res.status(500).send('Server error');
     }
     res.clearCookie('connect.sid'); // Clear the session cookie
-    res.redirect('/'); // Redirect to homepage after logout
+    res.redirect('/login'); // Redirect to login page after logout
+  });
+});
+// admin Logout route
+app.get('/adminLogout', (req, res) => {
+  req.session.destroy((err) => {
+      if (err) throw err;
+      res.redirect('/admin-login.html');
   });
 });
 
-// API Routes
+app.use('/admin', adminRoutes);
 
-// Get all books
-app.get('/api/books', (req, res) => {
-  db.query('SELECT * FROM books ORDER BY created_at DESC', (err, results) => {
-    if (err) {
-      console.error('Error fetching books:', err);
-      return res.status(500).json({ error: 'Database error' });
-    }
-    res.json(results);
-  });
+
+// Server listening on port
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
-
-// Get all audio
-app.get('/api/audio', (req, res) => {
-  db.query('SELECT * FROM audio ORDER BY created_at DESC', (err, results) => {
-    if (err) {
-      console.error('Error fetching audio:', err);
-      return res.status(500).json({ error: 'Database error' });
-    }
-    res.json(results);
-  });
-});
-
-// Get all videos
-app.get('/api/videos', (req, res) => {
-  db.query('SELECT * FROM videos ORDER BY created_at DESC', (err, results) => {
-    if (err) {
-      console.error('Error fetching videos:', err);
-      return res.status(500).json({ error: 'Database error' });
-    }
-    res.json(results);
-  });
-});
-
-// Add new book
-app.post('/api/books', isAdminAuthenticated, upload.fields([
-  { name: 'cover_image', maxCount: 1 },
-  { name: 'pdf_file', maxCount: 1 }
-]), (req, res) => {
-  const { title_english, title_arabic } = req.body;
-  const cover_image = req.files['cover_image'] ? req.files['cover_image'][0].filename : null;
-  const pdf_file = req.files['pdf_file'] ? req.files['pdf_file'][0].filename : null;
-
-  if (!pdf_file) {
-    return res.status(400).json({ error: 'PDF file is required' });
-  }
-
-  db.query(
-    'INSERT INTO books (title_english, title_arabic, cover_image, pdf_file) VALUES (?, ?, ?, ?)',
-    [title_english, title_arabic, cover_image, pdf_file],
-    (err, result) => {
-      if (err) {
-        console.error('Error adding book:', err);
-        return res.status(500).json({ error: 'Failed to add book' });
-      }
-      
-      res.json({ 
-        success: true,
-        message: 'Book added successfully',
-        id: result.insertId
-      });
-    }
-  );
-});
-
-// Add new audio
-app.post('/api/audio', isAdminAuthenticated, upload.single('audio_file'), (req, res) => {
-  const { title_english, title_arabic, description_english, description_arabic } = req.body;
-  const audio_file = req.file ? req.file.filename : null;
-
-  if (!audio_file) {
-    return res.status(400).json({ error: 'Audio file is required' });
-  }
-
-  db.query(
-    'INSERT INTO audio (title_english, title_arabic, description_english, description_arabic, audio_file) VALUES (?, ?, ?, ?, ?)',
-    [title_english, title_arabic, description_english, description_arabic, audio_file],
-    (err, result) => {
-      if (err) {
-        console.error('Error adding audio:', err);
-        return res.status(500).json({ error: 'Failed to add audio' });
-      }
-      
-      res.json({ 
-        success: true,
-        message: 'Audio added successfully',
-        id: result.insertId
-      });
-    }
-  );
-});
-
-// Add new video
-app.post('/api/videos', isAdminAuthenticated, (req, res) => {
-  const { title_english, title_arabic, description_english, description_arabic, video_url } = req.body;
-
-  if (!video_url) {
-    return res.status(400).json({ error: 'Video URL is required' });
-  }
-
-  db.query(
-    'INSERT INTO videos (title_english, title_arabic, description_english, description_arabic, video_url) VALUES (?, ?, ?, ?, ?)',
-    [title_english, title_arabic, description_english, description_arabic, video_url],
-    (err, result) => {
-      if (err) {
-        console.error('Error adding video:', err);
-        return res.status(500).json({ error: 'Failed to add video' });
-      }
-      
-      res.json({ 
-        success: true,
-        message: 'Video added successfully',
-        id: result.insertId
-      });
-    }
-  );
-});
-
-// Delete book
-app.delete('/api/books/:id', isAdminAuthenticated, (req, res) => {
-  const { id } = req.params;
-  
-  // Get book data to delete files
-  db.query('SELECT * FROM books WHERE id = ?', [id], (err, results) => {
-    if (err) {
-      console.error('Error fetching book:', err);
-      return res.status(500).json({ error: 'Database error' });
-    }
-    
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'Book not found' });
-    }
-
-    const book = results[0];
-
-    // Delete files
-    if (book.cover_image) {
-      try {
-        fs.unlinkSync(`uploads/covers/${book.cover_image}`);
-      } catch (err) {
-        console.log('Cover image file not found or already deleted');
-      }
-    }
-    
-    if (book.pdf_file) {
-      try {
-        fs.unlinkSync(`uploads/pdfs/${book.pdf_file}`);
-      } catch (err) {
-        console.log('PDF file not found or already deleted');
-      }
-    }
-
-    // Delete from database
-    db.query('DELETE FROM books WHERE id = ?', [id], (err) => {
-      if (err) {
-        console.error('Error deleting book:', err);
-        return res.status(500).json({ error: 'Failed to delete book' });
-      }
-      
-      res.json({ success: true, message: 'Book deleted successfully' });
-    });
-  });
-});
-
-// Delete audio
-app.delete('/api/audio/:id', isAdminAuthenticated, (req, res) => {
-  const { id } = req.params;
-  
-  // Get audio data to delete files
-  db.query('SELECT * FROM audio WHERE id = ?', [id], (err, results) => {
-    if (err) {
-      console.error('Error fetching audio:', err);
-      return res.status(500).json({ error: 'Database error' });
-    }
-    
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'Audio not found' });
-    }
-
-    const audio = results[0];
-
-    // Delete file
-    if (audio.audio_file) {
-      try {
-        fs.unlinkSync(`uploads/audio/${audio.audio_file}`);
-      } catch (err) {
-        console.log('Audio file not found or already deleted');
-      }
-    }
-
-    // Delete from database
-    db.query('DELETE FROM audio WHERE id = ?', [id], (err) => {
-      if (err) {
-        console.error('Error deleting audio:', err);
-        return res.status(500).json({ error: 'Failed to delete audio' });
-      }
-      
-      res.json({ success: true, message: 'Audio deleted successfully' });
-    });
-  });
-});
-
-// Delete video
-app.delete('/api/videos/:id', isAdminAuthenticated, (req, res) => {
-  const { id } = req.params;
-  
-  db.query('DELETE FROM videos WHERE id = ?', [id], (err) => {
-    if (err) {
-      console.error('Error deleting video:', err);
-      return res.status(500).json({ error: 'Failed to delete video' });
-    }
-    
-    res.json({ success: true, message: 'Video deleted successfully' });
-  });
-});
-
-// Submit contact form
-app.post('/api/contact', (req, res) => {
-  const { name, email, phone, category, subject, message } = req.body;
-  
-  if (!name || !email || !category || !message) {
-    return res.status(400).json({ error: 'Required fields are missing' });
-  }
-
-  db.query(
-    'INSERT INTO messages (name, email, phone, category, subject, message) VALUES (?, ?, ?, ?, ?, ?)',
-    [name, email, phone, category, subject, message],
-    (err) => {
-      if (err) {
-        console.error('Error saving contact message:', err);
-        return res.status(500).json({ error: 'Failed to send message' });
-      }
-
-      res.json({ success: true, message: 'Message sent successfully' });
-    }
-  );
-});
-
-// Get contact messages
-app.get('/api/messages', isAdminAuthenticated, (req, res) => {
-  db.query('SELECT * FROM messages ORDER BY created_at DESC', (err, results) => {
-    if (err) {
-      console.error('Error fetching messages:', err);
-      return res.status(500).json({ error: 'Failed to fetch messages' });
-    }
-    res.json(results);
-  });
-});
-
-// Paystack donation endpoint
-app.post('/api/donations', (req, res) => {
-  const {
-    donor_name,
-    donor_email,
-    donor_phone,
-    amount,
-    reference,
-    status,
-    payment_method,
-    transaction_id,
-    type,
-    description
-  } = req.body;
-
-  if (!donor_name || !amount || !reference) {
-    return res.status(400).json({ error: 'Required fields are missing' });
-  }
-
-  db.query(
-    'INSERT INTO donations (donor_name, donor_email, donor_phone, amount, reference, status, payment_method, transaction_id, type, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [donor_name, donor_email, donor_phone, amount, reference, status || 'success', payment_method, transaction_id, type || 'income', description || 'Donation received'],
-    (err, result) => {
-      if (err) {
-        console.error('Error saving donation:', err);
-        return res.status(500).json({ error: 'Failed to process donation' });
-      }
-
-      res.json({ 
-        success: true, 
-        message: 'Donation processed successfully',
-        id: result.insertId
-      });
-    }
-  );
-});
-
-// Get donations
-app.get('/api/donations', isAdminAuthenticated, (req, res) => {
-  db.query('SELECT * FROM donations ORDER BY created_at DESC', (err, results) => {
-    if (err) {
-      console.error('Error fetching donations:', err);
-      return res.status(500).json({ error: 'Failed to fetch donations' });
-    }
-    res.json(results);
-  });
-});
-
-// Serve uploaded files
-app.use('/uploads', express.static('uploads'));
-
-// Error handling middleware
-app.use((error, req, res, next) => {
-  if (error instanceof multer.MulterError) {
-    if (error.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ error: 'File too large' });
-    }
-  }
-  
-  console.error('Unhandled error:', error);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
-// Start server
-const startServer = async () => {
-  await createDirectories();
-  
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📱 Admin login: http://localhost:${PORT}/admin-login.html`);
-    console.log(`👤 Default admin credentials: username=admin, password=admin`);
-  });
-};
-
-startServer().catch(console.error);
